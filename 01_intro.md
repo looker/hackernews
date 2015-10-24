@@ -1,3 +1,5 @@
+# Hacking HackerNews
+
 Hackernews data has recently been release on BigQuery's data engine.  BigQuery is a giant clustered SQL engine that can query enormous amounts of data very quickly.
 
 We're going to explore this data using Looker.
@@ -340,7 +342,7 @@ Apparently authors succeed on HackerNews at different rates.  Let's create a mea
 We can then rerun our query using these new measures.  We can easily see **Slimy** is quite good at placing stories scoring 65.22%.
 
 <look height="300">
- type: table
+  type: table
   model: hackernews
   explore: stories
   dimensions: [stories.author]
@@ -393,7 +395,7 @@ And now we can look at stories by host they were posted to.  Let's sort by Score
   measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
   filters:
     stories.title: '%Facebook%'
-    stories.count_score_7_plus: '>5'
+    stories.count_score_7_plus: 6 to
   sorts: [stories.count_score_7_plus desc]
   limit: 500
   column_limit: 50
@@ -414,11 +416,13 @@ ORDER BY 3 DESC
 LIMIT 500
 ```
 
-Domains are probably more intresting then hosts, so let's build up another field that parses domain out of the host.
+### Domains are better.
+
+Domains are probably more intresting then hosts after all www.techcrunch.com and techcrunch.com both appear in this list.  So let's build up another field that parses domain out of the host.  We have to be careful to deal with hosts like 'bbc.co.uk', so we look for domains that end in two letters and grab more data.
 
 ```
   - dimension: url_domain
-    sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+)$')
+    sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
     html: |
       {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
 ```
@@ -430,34 +434,41 @@ Domains are probably more intresting then hosts, so let's build up another field
   dimensions: [stories.url_domain]
   measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
   filters:
-    stories.title: '%Facebook%'
-    stories.count_score_7_plus: '>5'
+    stories.count_score_7_plus: 6 to
   sorts: [stories.count_score_7_plus desc]
   limit: 500
   column_limit: 50
 </look>
 
 
-Are there hosts that are more successful than others? Lets look at Hosts by **Percent 7 Plus**.
+Are there domains that are more successful than others? Lets look at Hosts by **Percent 7 Plus**.
 
-<img src="/uploads/default/original/2X/1/19704db60e2097482a5709726d279fb905b66f16.png" width="580" height="278">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.url_domain]
+  measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
+  sorts: [stories.percent_7_plus desc]
+  limit: 500
+  column_limit: 50
+</look>
 
 Whoops, looks like a bunch of one-hit-wonders.  Let's eliminate hosts that have had less than 20 successful posts.
 
-<img src="/uploads/default/original/2X/b/ba3f1bf8afbaef4bed06b2639813a31cd56daa91.png" width="478" height="500">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.url_domain]
+  measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
+  filters:
+    stories.count_score_7_plus: 20 to
+  sorts: [stories.percent_7_plus desc]
+  limit: 500
+  column_limit: 50
+</look>
 
-## Who is posting?
-
-Looker knows how to build lists.  We add another LookML field to build a list of authors.
-
-```
- - measure: author_list
-    type: list
-    list_field: author  
-```
-And now we can add that to our query.
-
-<img src="/uploads/default/original/2X/6/63470abc48e90f6c865f83fe247ed383eb88dcdd.png" width="690" height="412">
 
 ## Building a Better Indication that a Post was on the Front Page.
 
@@ -504,7 +515,17 @@ We can join this table into our explorer.
 
 We can then look at our data by daily_rank and see the number of stories that match this.  The data looks right.  There are some 3000 days and a story for each rank for each day.
 
-<img src="/uploads/default/original/2X/d/d6645cb769566156fbca5fc51098f233e4861dff.png" width="585" height="430">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [daily_rank.daily_rank]
+  measures: [stories.count]
+  sorts: [daily_rank.daily_rank]
+  limit: 500
+  column_limit: 50
+</look>
+  
 
 And the SQL for this query:
 ```
@@ -552,15 +573,62 @@ We build them in a very similar we built our Score 7 measures.  Notice we simply
 
 And the simple output.  Looks like about 4% of posts make it to the top 25 on a given day.
 
-<img src="/uploads/default/original/2X/5/59b7925e58e2fa6c4e90bf3d348e9ecbdf0cf1e3.png" width="581" height="46">
+<look height="300">
+  
+  type: table
+  model: hackernews
+  explore: stories
+  measures: [stories.count, stories.count_rank_25_or_less, stories.percent_rank_25_or_less]
+  sorts: [stories.count desc]
+  limit: 500
+  column_limit: 50
+</look>
 
 Now let's look at it by poster.  Looks like Paul Graham has had lots of top 25 posts and a very high hit rate.  
 
-<img src="/uploads/default/original/2X/c/c82e30fcbbd88ce15d3749835d381bc7b40436f1.png" width="588" height="403">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.author]
+  measures: [stories.count, stories.count_rank_25_or_less, stories.percent_rank_25_or_less]
+  sorts: [stories.count_rank_25_or_less desc]
+  limit: 500
+  column_limit: 50
+</look>
 
-And by host, we start to see some new entrants.  Jeff Attwood's blog coding horror is now ranked 15 for all time.
+## Wow.  Looking by Domain is an Amazing List
 
-<img src="/uploads/default/original/2X/3/38e9d0514a505b265abe39c441eb6dfc9cac31f4.png" width="560" height="500">
+Rerunning the query, this time by target domain with high story counts with rank 25 or less gives us a fascinating list of domains.  The obvious ones are there, nytimes, bbc.co.uk, but scrolling down a little, I find domains I don't know about.  Following the links mostly take me to interesting places.
+
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.url_domain]
+  measures: [stories.count, stories.count_rank_25_or_less, stories.percent_rank_25_or_less]
+  sorts: [stories.count_rank_25_or_less desc]
+  limit: 500
+  column_limit: 50
+</look>
+
+## Comparing our VCs
+
+Two of Looker's VC Parters like to write (and I love to read what they write).  Firstround capital has the fabulous Firstround Review and Tom Tunguz writes really great blog posts.  Comparing them, it looks like the HackerNew audience appreciates FirstRound more then Tom.  I, of course, appreciate them both :).  Digging through the data, I see Tom change the name of his blog a few years ago.  Tom's performance is quite respectable, but  Firstround's performance is off the charts.  
+
+<look>
+  model: hackernews
+  explore: stories
+  dimensions: [stories.url_domain]
+  measures: [stories.count_rank_25_or_less, stories.percent_rank_25_or_less, stories.count_score_7_plus,
+    stories.percent_7_plus, stories.count, stories.count_url]
+  filters:
+    stories.url_domain: '%firstround.com%,%tunguz.com%'
+  sorts: [stories.url_domain]
+  limit: 500
+  column_limit: 50
+</look>
+
 
 ## Common Words in Top Posts
 

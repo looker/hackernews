@@ -88,7 +88,7 @@
     drill_fields: [url_host, count]
 
   - dimension: url_domain
-    sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+)$')
+    sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
     html: |
       {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
 
