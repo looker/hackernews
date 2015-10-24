@@ -662,9 +662,17 @@ Next we'll build an explore definition (the join relationships).  We'll reuse bo
     type: left_outer_each
 ```
 
-Now we can explore by word.  Let's look at the Words in the posts with a rank of 25 or less.  We'll scroll down a little to look past some of the small common words
+Now we can explore by word.  Let's look at the Words in the posts with a rank of 25 or less.  Scroll down a little to look past some of the small common words
 
-<img src="/uploads/default/original/2X/a/a036f49544b484a6884349088a712650a768cd2b.png" width="594" height="367">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: story_words
+  dimensions: [story_words.word]
+  measures: [stories.count]
+  sorts: [stories.count desc]
+  limit: 500
+</look>
 
 and the SQL
 
@@ -696,14 +704,193 @@ LIMIT 500
 
 Of course clicking on any of the numbers will drill in and show us any of the stories.
 
-<img src="/uploads/default/original/2X/a/ac320aebfe6dce2c800ccaab361fd46009411e5c.png" width="588" height="496">
+## Eliminating the common words with a Shakespere
 
+BigQuery provides a nice little table of all the words in Shakespere.  The table consists of the word, the corpus it appeard in and what year the corpus was written.  We write a little query to find the 1000 most common words in shakespere.
+
+```
+SELECT 
+    lower(word) as ssword
+    , count(distinct corpus) as c 
+  FROM [publicdata:samples.shakespeare] 
+  GROUP BY 1 
+  ORDER BY 2 
+  DESC 
+  LIMIT 1000
+```
+
+With this word list, we can modify our derived table to have a new column ssword, which if NOT NULL, appears in shakespere (and we would consider common).
+
+```
+- view: story_words
+  derived_table:
+    sql: |
+     SELECT a.id as id, a.word as word, b.ssword as ssword
+     FROM FLATTEN((
+       SELECT id, LOWER(SPLIT(title," ")) as word
+          FROM [fh-bigquery:hackernews.stories] stories
+       ), word) as a
+     LEFT JOIN (
+        SELECT lower(word) as ssword
+        , count(distinct corpus) as c 
+        FROM [publicdata:samples.shakespeare] 
+        GROUP BY 1 
+        ORDER BY 2 
+        DESC 
+        LIMIT 1000) as b
+      ON a.word = b.ssword  
+  fields:
+  - dimension: id
+    primary_key: true
+    hidden: true
+  - dimension: word
+  - dimension: is_comon_word
+    type: yesno
+    sql: ${TABLE}.ssword IS NOT NULL
+```
+
+Now rerunning our query, with the common field, we can see what we've isolated some of the more common words.
+
+<look height="300">
+  type: table
+  model: hackernews
+  explore: story_words
+  dimensions: [story_words.word, story_words.is_comon_word]
+  measures: [stories.count]
+  sorts: [stories.count desc]
+  limit: 500
+</look>
+
+And now without the common words
+
+<look height="300">
+  type: table
+  model: hackernews
+  explore: story_words
+  dimensions: [story_words.word, story_words.is_comon_word]
+  measures: [stories.count]
+  filters:
+    story_words.is_comon_word: 'No'
+  sorts: [stories.count desc]
+  limit: 500
+</look>
+
+## Finally, which words, if in the Title of the Story are most likely to get you on the Front Page
+
+<look height="300">
+  type: table
+  model: hackernews
+  explore: story_words
+  dimensions: [story_words.word]
+  measures: [stories.count, stories.percent_rank_25_or_less, stories.percent_7_plus]
+  filters:
+    story_words.is_comon_word: 'No'
+    stories.count: '100 to'
+  sorts: [stories.percent_rank_25_or_less desc]
+  limit: 500
+</look>
 
 ## Comparing
+
 Now with a few clicks we can start comparing.  By filtering words to Microsoft, Google and Facebook
 Let's compare  front page Posts by Year.
-<img src="/uploads/default/original/2X/8/891a39483106f66527fc98c922cc30ba7b52161c.png" width="509" height="500">
+
+
+<look height="300">
+  model: hackernews
+  explore: story_words
+  dimensions: [stories.post_year, story_words.word]
+  pivots: [story_words.word]
+  measures: [ stories.count_rank_25_or_less]
+  filters:
+    story_words.word: '"microsoft","google","facebook"'
+  sorts: [stories.post_year, story_words.word]
+  limit: 500
+  column_limit: 50
+</look>
+
+<look>
+  type: looker_column
+  model: hackernews
+  explore: story_words
+  dimensions: [stories.post_year, story_words.word]
+  pivots: [story_words.word]
+  measures: [stories.count_rank_25_or_less]
+  filters:
+    story_words.word: '"microsoft","google","facebook"'
+  sorts: [stories.post_year, story_words.word]
+  limit: 500
+  column_limit: 50
+  stacking: ''
+  show_value_labels: false
+  label_density: 25
+  legend_position: center
+  x_axis_gridlines: false
+  y_axis_gridlines: true
+  show_view_names: true
+  y_axis_combined: true
+  show_y_axis_labels: true
+  show_y_axis_ticks: true
+  y_axis_tick_density: default
+  y_axis_tick_density_custom: 5
+  show_x_axis_label: true
+  show_x_axis_ticks: true
+  x_axis_scale: auto
+  ordering: none
+  show_null_labels: false
+</look>
 
 Or computer Languages.
 
-<img src="/uploads/default/original/2X/2/28c858309e2e4ce74a2ffa630a598b12b53eaea6.png" width="439" height="500">
+<look height="300">
+  model: hackernews
+  explore: story_words
+  dimensions: [stories.post_year, story_words.word]
+  pivots: [story_words.word]
+  measures: [ stories.count_rank_25_or_less]
+  filters:
+    story_words.word: javascript,python,ruby
+  sorts: [stories.post_year, story_words.word]
+  limit: 500
+  column_limit: 50
+</look>
+
+<look>
+  type: looker_column
+  model: hackernews
+  explore: story_words
+  dimensions: [stories.post_year, story_words.word]
+  pivots: [story_words.word]
+  measures: [stories.count_rank_25_or_less]
+  filters:
+    story_words.word: javascript,python,ruby
+  sorts: [stories.post_year, story_words.word]
+  limit: 500
+  column_limit: 50
+  stacking: ''
+  show_value_labels: false
+  label_density: 25
+  legend_position: center
+  x_axis_gridlines: false
+  y_axis_gridlines: true
+  show_view_names: true
+  y_axis_combined: true
+  show_y_axis_labels: true
+  show_y_axis_ticks: true
+  y_axis_tick_density: default
+  y_axis_tick_density_custom: 5
+  show_x_axis_label: true
+  show_x_axis_ticks: true
+  x_axis_scale: auto
+  ordering: none
+  show_null_labels: false
+</look>
+
+## Other Ideas to Research
+
+* What's really in a score?  Is it related to the number of comments?
+* If it is, are there any cliffs in comments that might be a better indicator of "frontpageness"?
+* Of there are multiple people that post the same URL with almost the exact same text, does timing matter?
+* What time of day is the best time to post?  Does it matter?
+* Does velocity of comments matter in score?  How soon after the post do comments need to happen before a score goes up?
+* Do some commenters matter more then others (for example, if you get a comment from someone that comments a lot, does that help your score more?)

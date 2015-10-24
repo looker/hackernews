@@ -17,7 +17,7 @@
     type: left_outer_each
   - join: daily_rank
     view_label: Stories
-    sql_on: ${story_word.id} = ${daily_rank.id}
+    sql_on: ${story_words.id} = ${daily_rank.id}
     relationship: one_to_one
     type: left_outer_each
     
