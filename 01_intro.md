@@ -313,7 +313,10 @@ Humans are great at recognizing what works.  Let's look at ssclafani's Facebook 
   explore: stories
   dimensions: [stories.id, stories.post_time, stories.author, stories.title, stories.score]
   filters:
-    stories.author: 
+    stories.author: '"ssclafani"'
+    stories.score_7_plus: 'Yes'
+    stories.title: '%Facebook%'
+  sorts: [stories.post_time desc]
   limit: 500
 </look>
 
@@ -336,13 +339,36 @@ Apparently authors succeed on HackerNews at different rates.  Let's create a mea
 
 We can then rerun our query using these new measures.  We can easily see **Slimy** is quite good at placing stories scoring 65.22%.
 
-<img src="/uploads/default/original/2X/f/fc1b854b9c2d4c94b6dbd5678333f9ec6f14c73f.png" width="460" height="500">
+<look height="300">
+ type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.author]
+  measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
+  filters:
+    stories.title: '%Facebook%'
+  sorts: [stories.count_score_7_plus desc]
+  limit: 500
+  column_limit: 50
+</look>
 
-### Are there people better the Slimy?
+### Are there people better the author: 'Slimy'?
 
 We can sort by **Percent 7 Plus** and look at people that have posted more than 5 stories (again, an arbitrary number). 
 
-<img src="/uploads/default/original/2X/8/87fbbc7de52d9f71235dc2ab23163d2066562d8c.png" width="460" height="500">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.author]
+  measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
+  filters:
+    stories.title: '%Facebook%'
+    stories.count_score_7_plus: 6 to
+  sorts: [stories.percent_7_plus desc]
+  limit: 500
+  column_limit: 50
+</look>
 
 ## Where do the Stories Live?
 
@@ -357,9 +383,21 @@ We add the dimension to our model:
       {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
 ```
 
-And now we can look at stories by domain they were posted to.  Let's sort by Score 7 Plus.
+And now we can look at stories by host they were posted to.  Let's sort by Score 7 Plus.
 
-<img src="/uploads/default/original/2X/d/d00c42920ae4376dc794319396705a7fd395ffca.png" width="580" height="472">
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.url_host]
+  measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
+  filters:
+    stories.title: '%Facebook%'
+    stories.count_score_7_plus: '>5'
+  sorts: [stories.count_score_7_plus desc]
+  limit: 500
+  column_limit: 50
+</look>
 
 And a peek at the sql:
 
@@ -375,6 +413,30 @@ GROUP EACH BY 1
 ORDER BY 3 DESC
 LIMIT 500
 ```
+
+Domains are probably more intresting then hosts, so let's build up another field that parses domain out of the host.
+
+```
+  - dimension: url_domain
+    sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+)$')
+    html: |
+      {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
+```
+
+<look height="300">
+  type: table
+  model: hackernews
+  explore: stories
+  dimensions: [stories.url_domain]
+  measures: [stories.count, stories.count_score_7_plus, stories.percent_7_plus]
+  filters:
+    stories.title: '%Facebook%'
+    stories.count_score_7_plus: '>5'
+  sorts: [stories.count_score_7_plus desc]
+  limit: 500
+  column_limit: 50
+</look>
+
 
 Are there hosts that are more successful than others? Lets look at Hosts by **Percent 7 Plus**.
 

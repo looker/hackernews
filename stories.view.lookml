@@ -72,10 +72,30 @@
     type: string
     sql: ${TABLE}.url
     
+  - measure: count_url
+    type: count_distinct
+    sql: ${url}
+    drill_fields: [url, count]
+    
   - dimension: url_host
     sql: REGEXP_EXTRACT(${url},'http://([^/]+)/')
     html: |
       {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
+
+  - measure: count_url_host
+    type: count_distinct
+    sql: ${url_host}
+    drill_fields: [url_host, count]
+
+  - dimension: url_domain
+    sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+)$')
+    html: |
+      {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
+
+  - measure: count_url_domain
+    type: count_distinct
+    sql: ${url_domain}
+    drill_fields: [url_domain, count]
 
   - dimension: text
     type: string
