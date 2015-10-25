@@ -4,9 +4,10 @@ Hackernews data has recently been release on BigQuery's data engine.  BigQuery i
 
 ## Quick Links if you just want to play
 
-### [Play with the HackerNews Data Dashboard](/dashboards/169)
-### [See the code on Github](https://github.com/looker/hackernews)
-### [Explore the data Directly](/explore/hackernews/stories)
+* **[Play with the HackerNews Data Dashboard](/dashboards/169)**
+* **[See the code on Github](https://github.com/looker/hackernews)**
+* **[Explore the data Directly](/explore/hackernews/stories)**
+
 
 
 ## Start with the raw data
