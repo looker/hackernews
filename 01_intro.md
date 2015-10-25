@@ -1,8 +1,15 @@
 # Hacking HackerNews
 
-Hackernews data has recently been release on BigQuery's data engine.  BigQuery is a giant clustered SQL engine that can query enormous amounts of data very quickly.
+Hackernews data has recently been release on BigQuery's data engine.  BigQuery is a giant clustered SQL engine that can query enormous amounts of data very quickly.  
 
-We're going to explore this data using Looker.
+## Quick Links if you just want to play
+
+### [Play with the HackerNews Data Dashboard](/dashboards/169)
+### [See the code on Github](https://github.com/looker/hackernews)
+### [Explore the data Directly](/explore/hackernews/stories)
+
+
+## Start with the raw data
 
 Navigating to bigquery, we see there are two table, stories and comments.  Both tables are relatively simple
 
@@ -885,6 +892,33 @@ Or computer Languages.
   ordering: none
   show_null_labels: false
 </look>
+
+## Wiring this int an Application
+
+The next step is to make a data discovery application and cross wire all the research we've done so far.  We quickly build a dashboard that show posts, *over time*, *by domain*, *by author*, *by word*, and success rates into making to a score of 7 and from a score of 7 into the top 25.
+
+We wire up filters for author, domain and word, so that any of these will change all the data on the dashboard.
+
+For example Paul Grahm (author: pg), Is posting a little less over time, likes to post about ycombinator. talks about yc, applicathions, hn and startups.  His posts look very successful.
+
+<img src="/uploads/default/original/2X/b/b75d6f53fff47ab8465fa12b22859be3466ce393.png" width="469" height="499">
+
+We can then cross wire everywhere we display, author, domain and word to point to a dashboard, by simply changing the HTML rendering for each of these dimensions.  For example, this is the declaration for **author**.
+
+```
+  - dimension: author
+    type: string
+    sql: ${TABLE}.author
+    html: |
+      {{ linked_value }} 
+       <a href="/dashboards/169?author={{value}}" 
+        title="Goto Dashboard"
+        target=new>⚡</a>
+      <a href="https://news.ycombinator.com/user?id={{value}}" 
+        title="Goto news.ycombinator.com"
+        target=new>➚</a>
+```
+
 
 ## Other Ideas to Research
 

@@ -90,7 +90,11 @@
   - dimension: url_domain
     sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
     html: |
-      {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
+      {{ linked_value }} 
+       <a href="/dashboards/169?domain={{value}}" 
+        title="Goto Dashboard"
+        target=new>⚡</a>
+       <a href="http://{{value}}" title="Goto {{value}}" target=new>➚</a>
 
   - measure: count_url_domain
     type: count_distinct
@@ -117,8 +121,14 @@
     type: string
     sql: ${TABLE}.author
     html: |
-      {{ linked_value }} <a href="https://news.ycombinator.com/user?id={{value}}" target=new>➚</a>
-    
+      {{ linked_value }} 
+       <a href="/dashboards/169?author={{value}}" 
+        title="Goto Dashboard"
+        target=new>⚡</a>
+      <a href="https://news.ycombinator.com/user?id={{value}}" 
+        title="Goto news.ycombinator.com"
+        target=new>➚</a>
+        
   - measure: author_list
     type: list
     list_field: author    

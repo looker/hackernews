@@ -19,7 +19,14 @@
   - dimension: id
     primary_key: true
     hidden: true
+    
   - dimension: word
+    html: |
+      {{ linked_value }} 
+       <a href="/dashboards/169?word={{value}}" 
+        title="Goto Dashboard"
+        target=new>⚡</a>
+       
   - dimension: is_comon_word
     type: yesno
     sql: ${TABLE}.ssword IS NOT NULL
