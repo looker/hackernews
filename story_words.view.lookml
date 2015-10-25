@@ -3,7 +3,7 @@
     sql: |
      SELECT a.id as id, a.word as word, b.ssword as ssword
      FROM FLATTEN((
-       SELECT id, LOWER(SPLIT(title," ")) as word
+       SELECT id, REGEXP_EXTRACT(LOWER(SPLIT(title," ")),"([a-z]+)") as word
           FROM [fh-bigquery:hackernews.stories] stories
        ), word) as a
      LEFT JOIN (
