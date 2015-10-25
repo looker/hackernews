@@ -1,22 +1,23 @@
 # Hacking HackerNews
 
-Hackernews data has recently been release on BigQuery's data engine.  BigQuery is a giant clustered SQL engine that can query enormous amounts of data very quickly.  
+Hackernews data has recently been release on Google's BigQuery data engine.  BigQuery is a giant clustered SQL engine that can query enormous amounts of data very quickly.  
 
 ## Quick Links if you just want to play
+
+This article talks about building out a data model in LookML to be able to explore this data.  If you are in a rush, you can:
 
 * **[Play with the HackerNews Data Dashboard](/dashboards/169)**
 * **[See the code on Github](https://github.com/looker/hackernews)**
 * **[Explore the data Directly](/explore/hackernews/stories)**
 
 
-
 ## Start with the raw data
 
-Navigating to bigquery, we see there are two table, stories and comments.  Both tables are relatively simple
+Navigating to the [HackerNews data in BigQuery](https://bigquery.cloud.google.com/table/fh-bigquery:hackernews.stories), we see there are two table, stories and comments.  Both tables are relatively simple in structure.
 
 ## Table Stories
 
-Each story contains and id, score, who wrote it when it was written, the score the story achieved (I believe this is 'points' on http://news.ycombinator.com.  Each story also as a title and the URL containing the content.  Stories have decendants, not sure what that means yet, but we'll find out.
+Each story contains a story id, the author that made the post, when it was written, the score the story achieved (I believe this is 'points' on http://news.ycombinator.com.  Each story also as a title and the URL containing the content.  
 
 <img src="https://discourse.looker.com/uploads/default/original/2X/7/77a46d2cc6933d063c8e7a5bfd8d1c08d7513237.png" width="423" height="485">
 
@@ -28,7 +29,10 @@ Stories on hackernews have comments.  Each comment has an author, a timestamp of
 
 ## Getting Started
 
-Let's first start with Stories.  First we run Looker's generator to create a LookML model for stories.  Each field in the table with have an associated LookML declaration.
+Let's first start with Stories.  First we run Looker's generator to create a LookML model for stories.  Each field in the table will have an associated LookML dimension.  These dimensions are used both in Looker's Explorer and to write SQL statements and run them in BigQuery.  
+
+Without any changing any of this code, we can explore the data immediately.
+
 
 ```
 - explore: stories
@@ -181,7 +185,7 @@ My best story scored a 4.  Looking on the front page of Hacker news at the momen
 
 ## How are the Scores Distributed?
 
-If we set the score and the count the number of posts with each score, we should get an idea about how likely a story is to get a given score.  Looking at the table and graph below we can see that many stories are scored like mine, 1,2,3,4.   
+If use the score as a dimension (group by score, ins SQL) and the count the number of posts with each score, we should get an idea about how likely a story is to get a given score.  Looking at the table and graph below we can see that many stories are scored like mine, 1,2,3,4.   
 
 <look height="300">
   type: table
@@ -227,9 +231,13 @@ If we set the score and the count the number of posts with each score, we should
 
 ## Lucky 7
 
-Sometimes, just picking a threshold will help you figure out stuff.  In this case, I'm going to pick 7 as a threshold for an interesting story.  Later, we can investigate different thresholds, but for now, I'm going ot say if a story has a score of 7 or more, it's interesting.   
+The goal here is to try and figure out if a story made it to the front page of HackerNews.  Many stories each day are posted and most don't get there.  It is pretty obvious that the distrubution is heavily bifurcated, there are some stories that make it,  but most stories don't.  
 
-Let's build a new dimension.  In LookML.  We can reuse the score definition in the main model to create score_7_plus.
+Unfortunately, there is no obvious way, in the data to see the split.
+
+Sometimes, just picking a somewhat arbitrary threshold will help us find it.  In this case, I'm going to pick 7 as a threshold for an interesting story.  Later, we can investigate different thresholds, but for now, I'm going ot say if a story has a score of 7 or more, it's interesting.   
+
+Let's build a new dimension.  In LookML.  Note We can reuse the score definition (${score}) in the main model to create score_7_plus.
 
 ```
   - dimension: score_7_plus
@@ -237,7 +245,7 @@ Let's build a new dimension.  In LookML.  We can reuse the score definition in t
     sql: ${score} >= 7
 ```
 
-Then run a query using the new dimension, and we can see that about 15% (300K/1959K) of the stories have a score of 7 or above.
+Using the new *score_7_plus* dimension, we run a query and we can see that about 15% (300K/1959K) of the stories have a score of 7 or above.
 
 <look>
   type: table
@@ -250,7 +258,7 @@ Then run a query using the new dimension, and we can see that about 15% (300K/19
   total: true
 </look>
 
-By the way, Looker, using the LookML model, behind the scenes is writing all the SQL for us and sending it to BigQuery.
+Looker, using the LookML model, behind the scenes is writing all the SQL for us and sending it to BigQuery.  The query it sent on our behave was:
 
 ```
 SELECT 
@@ -265,7 +273,7 @@ LIMIT 500
 
 ## Who is the King of HackerNews?
 
-Getting a front page story is no easy feat.  Let's see if we can figure out of someone out there does it consistently.  We're going to use our lucky 7 as our threshold.  To examine this, we going to hold our grouping by **Score 7 Plus** and additionly group by Author.  Looker lets us pivot the results.  We're also going to sort by the Yes Count column.
+Getting a front page story is no easy feat.  Let's see if we can figure out of someone out there does it consistently.  We're going to use our lucky 7 as our threshold.  To examine this, we going to hold our grouping by **Score 7 Plus** and additionly group by Author.  Looker lets us pivot the results.  We're also going to sort by the Yes Count column to find the perosn with the most posts with a score of 7 or more.
 
 <look height="300">
   type: table
@@ -279,7 +287,7 @@ Getting a front page story is no easy feat.  Let's see if we can figure out of s
   column_limit: 50
 </look>
 
-It looks like an author **cwan** has had the most posts that have made it to the front page.  To see what **cwan** posts about, we just click on his story count.  Let's look at it by score.
+It looks like an author **cwan** has had the most posts that have made it to the front page.  To see what **cwan** posts about, we just click on his story count. All looker counts drill into the detail behind them.  Let's look at **cwan**'s posts.  
 
 <look height="300">
   type: table
@@ -294,7 +302,9 @@ It looks like an author **cwan** has had the most posts that have made it to the
 
 ##  Finding Top Posters about a Particular Subject.
 
-We can go back to our original "top poster" and find do some research about who posts the most about say 'Facebook'.   I've added row totals, so we can know the total number of posts, both 7 and above and not.
+Filtering data, to a smaller set can help us find trends about a particular subject.
+
+We can go back to our original "top poster" query and find do some research about who posts contain the word 'Facebook'.   We'll see a different set of people.
 
 Notice that the top poster **ssclanfani** has had 122 posts with 'Facebook' in the title and 65 of them have a score 7 or higher (about 50%).
 
@@ -314,8 +324,7 @@ Notice that the top poster **ssclanfani** has had 122 posts with 'Facebook' in t
   column_limit: 50
 </look>
 
-
-Humans are great at recognizing what works.  Let's look at ssclafani's Facebook posts and see if we can figure out what's going on.  Clicking into the 65, we can see his posts.
+Often, the devil is in the details.  Many times, I've clicked into a number and looked at the underlying data records and seen some pattern.  Let's look at ssclafani's Facebook posts and see if we can find something interesting.  Clicking into the 65, we can see his posts.
 
 <look height="300">
   type: table
@@ -332,7 +341,15 @@ Humans are great at recognizing what works.  Let's look at ssclafani's Facebook 
 
 ## Generalizing Hit Rate.
 
-Apparently authors succeed on HackerNews at different rates.  Let's create a measure the percentage of posts that are 7 or above.  In LookML we simply create a new count of stories that scored 7 or more (reusing the last declaration we made), and a new measure that computes the percentage.
+Pivoting the data is helpful, but we're still doing some calculations by hand.  We can create a couple of custom measures that will help us understand the data more readily. 
+
+We'll create a count of just the posts that scored 7 and above.
+
+Then we'll create a measure that is the percentage of all posts that scored 7 and above.
+
+LookML makes created these measures pretty easily.  
+ 
+Notice that we reuse the definition of *score_7_plus*
 
 ```
   - measure: count_score_7_plus
@@ -340,14 +357,18 @@ Apparently authors succeed on HackerNews at different rates.  Let's create a mea
     drill_fields: detail*
     filters:
       score_7_plus: Yes
-      
+```
+
+And we reuse the definition of *count_score_7_plus* in the following definition.
+
+```
   - measure: percent_7_plus
     type: number
     sql: 100.0 * ${count_score_7_plus} / ${count}
     decimals: 2
 ```
 
-We can then rerun our query using these new measures.  We can easily see **Slimy** is quite good at placing stories scoring 65.22%.
+With the new measures, we can rebuild and run our previous query. The percentage measure really helps us see that the author **Slimy** is quite good at placing stories where 65.22% score 7 or higher.
 
 <look height="300">
   type: table
@@ -364,7 +385,7 @@ We can then rerun our query using these new measures.  We can easily see **Slimy
 
 ### Are there people better the author: 'Slimy'?
 
-We can sort by **Percent 7 Plus** and look at people that have posted more than 5 stories (again, an arbitrary number). 
+Another advantage of creating a new measure is we can now sort by it.  Let's Sort by **Percent 7 Plus** and look at people that have posted more than 5 stories (again, an arbitrary number). 
 
 <look height="300">
   type: table
@@ -389,8 +410,6 @@ We add the dimension to our model:
 ```
   - dimension: url_host
     sql: REGEXP_EXTRACT(${url},'http://([^/]+)/')
-    html: |
-      {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
 ```
 
 And now we can look at stories by host they were posted to.  Let's sort by Score 7 Plus.
@@ -409,7 +428,7 @@ And now we can look at stories by host they were posted to.  Let's sort by Score
   column_limit: 50
 </look>
 
-And a peek at the sql:
+And a peek at the sql that Looker wrote for us:
 
 ```
 SELECT 
@@ -426,13 +445,11 @@ LIMIT 500
 
 ### Domains are better.
 
-Domains are probably more intresting then hosts after all www.techcrunch.com and techcrunch.com both appear in this list.  So let's build up another field that parses domain out of the host.  We have to be careful to deal with hosts like 'bbc.co.uk', so we look for domains that end in two letters and grab more data.
+Domains are probably more intresting then hosts after all www.techcrunch.com and techcrunch.com both appear in this list.  So let's build up another field that parses domain out of the host.  We have to be careful to deal with hosts like 'bbc.co.uk', so we look for domains that end in two letters and grab more data. 
 
 ```
   - dimension: url_domain
     sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
-    html: |
-      {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
 ```
 
 <look height="300">
@@ -535,7 +552,8 @@ We can then look at our data by daily_rank and see the number of stories that ma
 </look>
   
 
-And the SQL for this query:
+The SQL that Looker wrote for this query is below.  As the model gets more and more complex, so do the queries, but asking the question remains simple.
+
 ```
 SELECT 
   daily_rank.daily_rank AS daily_rank_daily_rank,
@@ -560,19 +578,25 @@ LIMIT 500
 ```
 
 ## Let's build a new Top 25 set of dimensions and measures
+
+Like we did before, having dimension and measures built into the model will allow us to think in these terms.
+
 We build them in a very similar we built our Score 7 measures.  Notice we simply reference ${daily_rank.rank} and Looker figures out how to write the SQL to make it all fit together.
 
 ```
+  # Was this post in the top 25 on a given day?
   - dimension: rank_25_or_less
     type: yesno
     sql: ${daily_rank.rank} <= 25
 
+  # How many posts were in the top 25 out of this group of posts?
   - measure: count_rank_25_or_less
     type: count
     drill_fields: detail*
     filters:
       rank_25_or_less: Yes
       
+  # What Percentage of posts were in the top 25 in group set of posts?
   - measure: percent_rank_25_or_less
     type: number
     sql: 100.0 * ${count_rank_25_or_less} / ${count}
@@ -607,7 +631,7 @@ Now let's look at it by poster.  Looks like Paul Graham has had lots of top 25 p
 
 ## Wow.  Looking by Domain is an Amazing List
 
-Rerunning the query, this time by target domain with high story counts with rank 25 or less gives us a fascinating list of domains.  The obvious ones are there, nytimes, bbc.co.uk, but scrolling down a little, I find domains I don't know about.  Following the links mostly take me to interesting places.
+Rerunning the query, this time by target domain with high story counts with rank 25 or less gives us a fascinating list of domains.  The obvious ones are there, nytimes, bbc.co.uk, but scrolling down a little, I find domains I don't know about.  Following the links (we'll talk about how to make these later) usualy takes me to an interesting place.
 
 <look height="300">
   type: table
@@ -640,7 +664,9 @@ Two of Looker's VC Parters like to write (and I love to read what they write).  
 
 ## Common Words in Top Posts
 
-We can embellish so we can explore the top words in posts.  First, we're going to build a derived table that with have two columns, the story id, and a word that appeared in the title.
+We can now find top posts.  Let's figure out if we can figure out why some posts are top. Are top posts talking about something in particular?  Let's see if we can figure out common words in posts.
+
+First, we're going to build a derived table that with have two columns, the story id, and a word that appeared in the title.
 
 ```
  view: story_words
@@ -682,7 +708,7 @@ Now we can explore by word.  Let's look at the Words in the posts with a rank of
   limit: 500
 </look>
 
-and the SQL
+and again, the SQL Looker is writing for us...
 
 ```
 SELECT 
@@ -714,7 +740,15 @@ Of course clicking on any of the numbers will drill in and show us any of the st
 
 ## Eliminating the common words with a Shakespere
 
-BigQuery provides a nice little table of all the words in Shakespere.  The table consists of the word, the corpus it appeard in and what year the corpus was written.  We write a little query to find the 1000 most common words in shakespere.
+The common words are a problem.  It would be great to eliminate or at least flag them.
+
+To do this, we're going to use an inspired little hack.
+
+BigQuery provides a nice little table of all the words in Shakespere.  The table consists of the word, the corpus it appeard in and what year the corpus was written.  
+
+We are going to find these 1000 words and then flag the words that we encounter that appear in the 1000 word list.
+
+First, we write a little query to find the 1000 most common words in shakespere.  
 
 ```
 SELECT 
@@ -727,7 +761,7 @@ SELECT
   LIMIT 1000
 ```
 
-With this word list, we can modify our derived table to have a new column ssword, which if NOT NULL, appears in shakespere (and we would consider common).
+With this word list, we can modify our derived table that finds words in posts to have a new column ssword, which if NOT NULL, appears in shakespere (and we would consider common).
 
 ```
 - view: story_words
@@ -894,17 +928,21 @@ Or computer Languages.
   show_null_labels: false
 </look>
 
-## Wiring this int an Application
+## Wiring this into an Application
 
-The next step is to make a data discovery application and cross wire all the research we've done so far.  We quickly build a dashboard that show posts, *over time*, *by domain*, *by author*, *by word*, and success rates into making to a score of 7 and from a score of 7 into the top 25.
+The next step is to make a data discovery application and cross wire all the research we've done so far.  We easily build a dashboard that show posts, *over time*, *by domain*, *by author*, *by word*, and success rates into making to a score of 7 and from a score of 7 into the top 25.
 
 We wire up filters for author, domain and word, so that any of these will change all the data on the dashboard.
 
 For example Paul Grahm (author: pg), Is posting a little less over time, likes to post about ycombinator. talks about yc, applicathions, hn and startups.  His posts look very successful.
 
-<img src="/uploads/default/original/2X/b/b75d6f53fff47ab8465fa12b22859be3466ce393.png" width="469" height="499">
+<img src="https://discourse.looker.com/uploads/default/original/2X/b/b75d6f53fff47ab8465fa12b22859be3466ce393.png" width="469" height="499">
 
-We can then cross wire everywhere we display, author, domain and word to point to a dashboard, by simply changing the HTML rendering for each of these dimensions.  For example, this is the declaration for **author**.
+One of the nice things we can do in Looker is to create links when we render cels.  Dimensions have a **html:** that is rendered with [liquid templating](http://liquidmarkup.org/).
+
+Using this mechanism, we can cross link everywhere we display, author, domain and word to point to a dashboard.
+
+For example, we link author to both the dashboard and the profile page on hacker news.  We use emoji's to make it all work.  
 
 ```
   - dimension: author
@@ -923,9 +961,11 @@ We can then cross wire everywhere we display, author, domain and word to point t
 
 ## Other Ideas to Research
 
+There is lots more to investigate.
+
 * What's really in a score?  Is it related to the number of comments?
 * If it is, are there any cliffs in comments that might be a better indicator of "frontpageness"?
-* Of there are multiple people that post the same URL with almost the exact same text, does timing matter?
+* If there are multiple people that post the same URL with almost the exact same text, does timing matter?
 * What time of day is the best time to post?  Does it matter?
 * Does velocity of comments matter in score?  How soon after the post do comments need to happen before a score goes up?
 * Do some commenters matter more then others (for example, if you get a comment from someone that comments a lot, does that help your score more?)
