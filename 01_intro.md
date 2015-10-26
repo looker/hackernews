@@ -383,7 +383,7 @@ With the new measures, we can rebuild and run our previous query. The percentage
   column_limit: 50
 </look>
 
-### Are there people better the author: 'Slimy'?
+### Are there people better than author: 'Slimy'?
 
 Another advantage of creating a new measure is we can now sort by it.  Let's Sort by **Percent 7 Plus** and look at people that have posted more than 5 stories (again, an arbitrary number). 
 
