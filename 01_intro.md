@@ -235,9 +235,9 @@ The goal here is to try and figure out if a story made it to the front page of H
 
 Unfortunately, there is no obvious way, in the data to see the split.
 
-Sometimes, just picking a somewhat arbitrary threshold will help us find it.  In this case, I'm going to pick 7 as a threshold for an interesting story.  Later, we can investigate different thresholds, but for now, I'm going ot say if a story has a score of 7 or more, it's interesting.   
+Sometimes, just picking a somewhat arbitrary threshold will help us find it.  In this case, I'm going to pick 7 as a threshold for an interesting story.  Later, we can investigate different thresholds, but for now, I'm going to say if a story has a score of 7 or more, it's interesting.   
 
-Let's build a new dimension.  In LookML.  Note We can reuse the score definition (${score}) in the main model to create score_7_plus.
+Let's build a new dimension.  In LookML.  Note we can reuse the score definition (${score}) in the main model to create score_7_plus.
 
 ```
   - dimension: score_7_plus
@@ -258,7 +258,7 @@ Using the new *score_7_plus* dimension, we run a query and we can see that about
   total: true
 </look>
 
-Looker, using the LookML model, behind the scenes is writing all the SQL for us and sending it to BigQuery.  The query it sent on our behave was:
+Looker, using the LookML model, behind the scenes is writing all the SQL for us and sending it to BigQuery.  The query it sent on our behalf was:
 
 ```
 SELECT 
@@ -273,7 +273,7 @@ LIMIT 500
 
 ## Who is the King of HackerNews?
 
-Getting a front page story is no easy feat.  Let's see if we can figure out of someone out there does it consistently.  We're going to use our lucky 7 as our threshold.  To examine this, we going to hold our grouping by **Score 7 Plus** and additionly group by Author.  Looker lets us pivot the results.  We're also going to sort by the Yes Count column to find the perosn with the most posts with a score of 7 or more.
+Getting a front page story is no easy feat.  Let's see if we can figure out of someone out there does it consistently.  We're going to use our lucky 7 as our threshold.  To examine this, we going to hold our grouping by **Score 7 Plus** and additionally group by Author.  Looker lets us pivot the results.  We're also going to sort by the Yes Count column to find the person with the most posts with a score of 7 or more.
 
 <look height="300">
   type: table
@@ -304,7 +304,7 @@ It looks like an author **cwan** has had the most posts that have made it to the
 
 Filtering data, to a smaller set can help us find trends about a particular subject.
 
-We can go back to our original "top poster" query and find do some research about who posts contain the word 'Facebook'.   We'll see a different set of people.
+We can go back to our original "top poster" query and find do some research about whose posts contain the word 'Facebook'.   We'll see a different set of people.
 
 Notice that the top poster **ssclanfani** has had 122 posts with 'Facebook' in the title and 65 of them have a score 7 or higher (about 50%).
 
@@ -347,7 +347,7 @@ We'll create a count of just the posts that scored 7 and above.
 
 Then we'll create a measure that is the percentage of all posts that scored 7 and above.
 
-LookML makes created these measures pretty easily.  
+LookML makes creating these measures easy.  
  
 Notice that we reuse the definition of *score_7_plus*
 
@@ -403,7 +403,7 @@ Another advantage of creating a new measure is we can now sort by it.  Let's Sor
 
 ## Where do the Stories Live?
 
-Hacker New only contains titles and urls that point places (and comments).  Let's take a look where the stories that are posted live.  In order to do this, we'll have to parse out the host from the URL.  We'll build a dimension in LookML that does this.  BigQuery's SQL has a regular expression extractor that makes it pretty easy.  LookML also has a way that we can write the html for the thing we are displaying.
+Hacker News only contains titles and urls that point places (and comments).  Let's take a look where the stories that are posted live.  In order to do this, we'll have to parse out the host from the URL.  We'll build a dimension in LookML that does this.  BigQuery's SQL has a regular expression extractor that makes it pretty easy.  LookML also has a way that we can write the html for the thing we are displaying.
 
 We add the dimension to our model:
 
@@ -412,7 +412,7 @@ We add the dimension to our model:
     sql: REGEXP_EXTRACT(${url},'http://([^/]+)/')
 ```
 
-And now we can look at stories by host they were posted to.  Let's sort by Score 7 Plus.
+And now we can look at stories by the host they were posted to.  Let's sort by Score 7 Plus.
 
 <look height="300">
   type: table
@@ -445,7 +445,7 @@ LIMIT 500
 
 ### Domains are better.
 
-Domains are probably more intresting then hosts after all www.techcrunch.com and techcrunch.com both appear in this list.  So let's build up another field that parses domain out of the host.  We have to be careful to deal with hosts like 'bbc.co.uk', so we look for domains that end in two letters and grab more data. 
+Domains are probably more interesting then hosts after all www.techcrunch.com and techcrunch.com both appear in this list.  So let's build up another field that parses domain out of the host.  We have to be careful to deal with hosts like 'bbc.co.uk', so we look for domains that end in two letters and grab more data. 
 
 ```
   - dimension: url_domain
@@ -528,7 +528,7 @@ In order to compute the daily rank, we'll need to use SQL's window function and 
     type: number
 ```
 
-We can join this table into our explorer.
+We can join this table into our stories explore.
 
 ```
 - explore: stories
@@ -646,7 +646,7 @@ Rerunning the query, this time by target domain with high story counts with rank
 
 ## Comparing our VCs
 
-Two of Looker's VC Parters like to write (and I love to read what they write).  Firstround capital has the fabulous Firstround Review and Tom Tunguz writes really great blog posts.  Comparing them, it looks like the HackerNew audience appreciates FirstRound more then Tom.  I, of course, appreciate them both :).  Digging through the data, I see Tom change the name of his blog a few years ago.  Tom's performance is quite respectable, but  Firstround's performance is off the charts.  
+Two of Looker's VC Parters like to write (and I love to read what they write).  Firstround capital has the fabulous Firstround Review and Tom Tunguz writes really great blog posts.  Comparing them, it looks like the HackerNews audience appreciates FirstRound more then Tom.  I, of course, appreciate them both :).  Digging through the data, I see Tom change the name of his blog a few years ago.  Tom's performance is quite respectable, but  Firstround's performance is off the charts.  
 
 <look>
   model: hackernews
@@ -744,11 +744,11 @@ The common words are a problem.  It would be great to eliminate or at least flag
 
 To do this, we're going to use an inspired little hack.
 
-BigQuery provides a nice little table of all the words in Shakespere.  The table consists of the word, the corpus it appeard in and what year the corpus was written.  
+BigQuery provides a nice little table of all the words in Shakespere.  The table consists of the word, the corpus it appeared in and what year the corpus was written.  
 
 We are going to find these 1000 words and then flag the words that we encounter that appear in the 1000 word list.
 
-First, we write a little query to find the 1000 most common words in shakespere.  
+First, we write a little query to find the 1000 most common words in Shakespere.  
 
 ```
 SELECT 
@@ -817,7 +817,7 @@ And now without the common words
   limit: 500
 </look>
 
-## Finally, which words, if in the Title of the Story are most likely to get you on the Front Page
+## Finally, which words, if in the Title of the Story, are most likely to get you on the Front Page
 
 <look height="300">
   type: table
@@ -835,7 +835,7 @@ And now without the common words
 ## Comparing
 
 Now with a few clicks we can start comparing.  By filtering words to Microsoft, Google and Facebook
-Let's compare  front page Posts by Year.
+Let's compare front page Posts by Year.
 
 
 <look height="300">
@@ -934,11 +934,11 @@ The next step is to make a data discovery application and cross wire all the res
 
 We wire up filters for author, domain and word, so that any of these will change all the data on the dashboard.
 
-For example Paul Grahm (author: pg), Is posting a little less over time, likes to post about ycombinator. talks about yc, applicathions, hn and startups.  His posts look very successful.
+For example Paul Grahm (author: pg), Is posting a little less over time, likes to post about ycombinator. talks about yc, applications, hn and startups.  His posts look very successful.
 
 <img src="https://discourse.looker.com/uploads/default/original/2X/b/b75d6f53fff47ab8465fa12b22859be3466ce393.png" width="469" height="499">
 
-One of the nice things we can do in Looker is to create links when we render cels.  Dimensions have a **html:** that is rendered with [liquid templating](http://liquidmarkup.org/).
+One of the nice things we can do in Looker is to create links when we render the result cells.  Dimensions have a **html:** parameter that is rendered with [liquid templating](http://liquidmarkup.org/).
 
 Using this mechanism, we can cross link everywhere we display, author, domain and word to point to a dashboard.
 
