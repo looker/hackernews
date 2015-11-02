@@ -2,7 +2,7 @@
   derived_table:
     sql: |
       SELECT  descendent.type AS type,
-      descendent.parent AS Level1,
+      descendent.parent AS level1,
       descendent.id AS Level2,
       descendent3.id AS Level3,
       descendent4.id AS Level4,
@@ -71,6 +71,7 @@
 #     
 #   - dimension: parent
 #     sql: ${TABLE}.parent
+    
   - dimension: type
     sql: ${TABLE}.type
 
