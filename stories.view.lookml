@@ -64,6 +64,7 @@
   - dimension: title
     type: string
     sql: ${TABLE}.title
+    case_sensitive: false
 
   - dimension: title_word
     sql: SPLIT(${title})

@@ -6,9 +6,9 @@ Hackernews data has recently been release on Google's BigQuery data engine.  Big
 
 This article talks about building out a data model in LookML to be able to explore this data.  If you are in a rush, you can:
 
-* **[Play with the HackerNews Data Dashboard](/dashboards/169)**
+* **[Play with the HackerNews Data Dashboard](https://learn.looker.com/dashboards/169)**
 * **[See the code on Github](https://github.com/looker/hackernews)**
-* **[Explore the data Directly](/explore/hackernews/stories)**
+* **[Explore the data Directly](https://learn.looker.com/explore/hackernews/stories)**
 
 
 ## Start with the raw data

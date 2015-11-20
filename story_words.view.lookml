@@ -23,7 +23,7 @@
   - dimension: word
     html: |
       {{ linked_value }} 
-       <a href="/dashboards/169?word={{value}}" 
+       <a href="/dashboards/169?title=%25{{value}}%25" 
         title="Goto Dashboard"
         target=new>⚡</a>
        
