@@ -13,7 +13,11 @@
   - measure: count
     type: count
     drill_fields: detail*
-
+  
+  - measure: cumulative_story_count
+    type: running_total
+    sql: ${count} 
+    
   - dimension: score_7_plus
     type: yesno
     sql: ${score} >= 7
@@ -27,7 +31,7 @@
   - measure: percent_7_plus
     type: number
     sql: 100.0 * ${count_score_7_plus} / ${count}
-    decimals: 2
+    value_format: '0.00\%'
 
   - dimension: rank_25_or_less
     type: yesno
@@ -42,7 +46,7 @@
   - measure: percent_rank_25_or_less
     type: number
     sql: 100.0 * ${count_rank_25_or_less} / ${count}
-    decimals: 2
+    value_format: '0.00\%'
 
   - dimension: score
     type: int
@@ -132,7 +136,12 @@
         
   - measure: author_list
     type: list
-    list_field: author    
+    list_field: author
+  
+  - measure: count_authors
+    type: count_distinct
+    sql: ${author}
+    drill_fields: [author, count, percent_7_plus]
     
   sets:
     detail: [id, post_time, author, title, score]
