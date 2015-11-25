@@ -76,6 +76,9 @@
   - dimension: url
     type: string
     sql: ${TABLE}.url
+    html: |
+      {{ linked_value }} 
+       <a href="{{value}}" title="Goto {{value}}" target=new>➚</a>
     
   - measure: count_url
     type: count_distinct
