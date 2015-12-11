@@ -1,5 +1,7 @@
 - connection: thelook_bigquery
 
+# this is a comment
+
 - include: "*.view.lookml"
 
 - explore: stories
