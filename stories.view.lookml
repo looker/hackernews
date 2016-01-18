@@ -5,7 +5,7 @@
   fields:
   - dimension: id
     primary_key: true
-    type: int
+    type: number
     sql: ${TABLE}.id
     html: |
       {{ linked_value }} <a href="https://news.ycombinator.com/item?id={{value}}" target=new>➚</a>
@@ -49,7 +49,7 @@
     value_format: '0.00\%'
 
   - dimension: score
-    type: int
+    type: number
     sql: ${TABLE}.score
     
   - measure: average_score
@@ -57,7 +57,7 @@
     sql: ${score}
 
   - dimension: time
-    type: int
+    type: number
     sql: ${TABLE}.[time]
 
   - dimension_group: post
@@ -99,7 +99,7 @@
     sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
     html: |
       {{ linked_value }} 
-       <a href="/dashboards/169?domain={{value}}" 
+       <a href="/embed/dashboards/169?domain={{value}}" 
         title="Goto Dashboard"
         target=new>⚡</a>
        <a href="http://{{value}}" title="Goto {{value}}" target=new>➚</a>
@@ -122,7 +122,7 @@
     sql: ${TABLE}.dead
 
   - dimension: descendants
-    type: int
+    type: number
     sql: ${TABLE}.descendants
 
   - dimension: author
@@ -130,7 +130,7 @@
     sql: ${TABLE}.author
     html: |
       {{ linked_value }} 
-       <a href="/dashboards/169?author={{value}}" 
+       <a href="/embed/dashboards/169?author={{value}}" 
         title="Goto Dashboard"
         target=new>⚡</a>
       <a href="https://news.ycombinator.com/user?id={{value}}" 

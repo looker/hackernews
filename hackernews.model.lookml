@@ -8,15 +8,6 @@
     view_label: Stories
     sql_on: ${stories.id} = ${daily_rank.id}
     relationship: one_to_one
-  - join: comment_tree
-    sql_on: ${stories.id} = ${comment_tree.level1}
-
-  
-- explore: comments
-
-- explore: comment_tree
-
-- explore: author_response
 
 - explore: story_words
   joins:
