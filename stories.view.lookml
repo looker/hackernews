@@ -99,6 +99,9 @@
 
   - dimension: url_domain
     sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
+    links:
+    - label: Goto {{ value }}
+      url: "{{ value }}"
 
   - measure: count_url_domain
     type: count_distinct
