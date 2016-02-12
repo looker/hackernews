@@ -1,4 +1,4 @@
-- connection: thelook_bigquery
+- connection: bigquery_publicdata
 
 - include: "*.view.lookml"
 
