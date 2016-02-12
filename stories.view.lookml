@@ -76,9 +76,10 @@
   - dimension: url
     type: string
     sql: ${TABLE}.url
-    html: |
-      {{ linked_value }} 
-       <a href="{{value}}" title="Goto {{value}}" target=new>➚</a>
+    links:
+    - label: Goto {{ value }}
+      url: "{{ value }}"
+      
     
   - measure: count_url
     type: count_distinct
@@ -87,9 +88,10 @@
     
   - dimension: url_host
     sql: REGEXP_EXTRACT(${url},'http://([^/]+)/')
-    html: |
-      {{ linked_value }} <a href="http://{{value}}" target=new>➚</a>
-
+    links:
+    - label: Goto {{ value }}
+      url: "{{ value }}"
+      
   - measure: count_url_host
     type: count_distinct
     sql: ${url_host}
@@ -97,12 +99,6 @@
 
   - dimension: url_domain
     sql: REGEXP_EXTRACT(${url_host},'([^\\.]+\\.[^\\.]+(?:\\.[a-zA-Z].)?)$')
-    html: |
-      {{ linked_value }} 
-       <a href="/embed/dashboards/169?domain={{value}}" 
-        title="Goto Dashboard"
-        target=new>⚡</a>
-       <a href="http://{{value}}" title="Goto {{value}}" target=new>➚</a>
 
   - measure: count_url_domain
     type: count_distinct
@@ -128,15 +124,11 @@
   - dimension: author
     type: string
     sql: ${TABLE}.author
-    html: |
-      {{ linked_value }} 
-       <a href="/embed/dashboards/169?author={{value}}" 
-        title="Goto Dashboard"
-        target=new>⚡</a>
-      <a href="https://news.ycombinator.com/user?id={{value}}" 
-        title="Goto news.ycombinator.com"
-        target=new>➚</a>
-        
+    links:
+    - label: Goto news.ycombinator.com
+      url: https://news.ycombinator.com/user?id={{value}}
+      icon_url: https://news.ycombinator.com/favicon.ico
+      
   - measure: author_list
     type: list
     list_field: author
@@ -148,6 +140,3 @@
     
   sets:
     detail: [id, post_time, author, title, score]
-    
-    
-    
