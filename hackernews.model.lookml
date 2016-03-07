@@ -2,6 +2,8 @@
 
 - include: "*.view.lookml"
 
+- persist_for: 10000 hours
+
 - explore: stories
   joins:
   - join: daily_rank
