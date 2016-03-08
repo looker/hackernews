@@ -1,4 +1,4 @@
-- connection: bigquery_publicdata
+- connection: lookerdata_publicdata
 
 - include: "*.view.lookml"
 
