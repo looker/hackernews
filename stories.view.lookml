@@ -102,6 +102,11 @@
     links:
     - label: Goto {{ value }}
       url: "{{ value }}"
+  
+  - dimension: domain_logo
+    sql: ${url_domain}
+    html: |
+      <img src="http://logo.clearbit.com/{{ value }}" height=32 width=32> {{ value }}
 
   - measure: count_url_domain
     type: count_distinct
