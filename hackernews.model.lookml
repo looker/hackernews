@@ -1,7 +1,7 @@
 - connection: lookerdata_publicdata
 
 - include: "*.view.lookml"
-
+- case_sensitive: false          # added by Tig to make filters case-insensitive
 - persist_for: 10000 hours
 
 - explore: stories 
