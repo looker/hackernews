@@ -23,5 +23,6 @@
   - dimension: word
 
   - dimension: is_comon_word
+    label: 'is_common_word'
     type: yesno
     sql: ${TABLE}.ssword IS NOT NULL
