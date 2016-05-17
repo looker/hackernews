@@ -69,6 +69,9 @@
     type: string
     sql: ${TABLE}.title
     case_sensitive: false
+    links:
+    - label: Read
+      url: "{{ stories.url._value }}"
 
   - dimension: title_word
     sql: SPLIT(${title})
@@ -79,7 +82,7 @@
     links:
     - label: Goto {{ value }}
       url: "{{ value }}"
-      
+  
     
   - measure: count_url
     type: count_distinct
